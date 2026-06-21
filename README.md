@@ -38,6 +38,12 @@ systemctl --user enable --now $PWD/services/asr-core.service
 | `/transcribe` | POST | Transcribe an audio file |
 | `/stats` | GET | Request stats and GPU memory |
 
+## Dashboard
+
+ASRCore includes a web dashboard for monitoring model status, GPU memory, and request stats.
+
+![Dashboard](asset/snapshot_dashboard.jpeg)
+
 ## Models
 
 Models are loaded from the directory configured in `asr_core.toml`:
