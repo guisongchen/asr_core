@@ -156,12 +156,6 @@ button.htmx-request::after {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-#status-panel.htmx-request {
-    opacity: 0.5;
-    pointer-events: none;
-    transition: opacity 0.15s;
-}
-
 /* ── stats ────────────────────────────────── */
 
 .stat-grid {
