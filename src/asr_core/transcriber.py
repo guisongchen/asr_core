@@ -8,7 +8,6 @@ from qwen_asr import Qwen3ASRModel
 from .config import (
     ALLOWED_LANGUAGES,
     MODEL_CHOICES,
-    MODEL_LOCAL_PATH,
     MODEL_READY_TIMEOUT,
 )
 
@@ -40,8 +39,6 @@ class AudioTranscriber:
             local_path = project_root / "models" / self.model_name
             if local_path.is_dir():
                 model_id = str(local_path)
-            elif Path(MODEL_LOCAL_PATH).is_dir():
-                model_id = MODEL_LOCAL_PATH
             else:
                 model_id = f"Qwen/{self.model_name}"
 

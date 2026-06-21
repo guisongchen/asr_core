@@ -93,11 +93,12 @@ def transcribe(req: TranscribeRequest):
     _stats["requests_total"] += 1
 
     try:
-        if _transcriber is None or _transcriber.model_name != (
-            req.model_name or MODEL_SIZE_DEFAULT
-        ):
-            load_req = LoadRequest(model_name=req.model_name or MODEL_SIZE_DEFAULT)
-            load(load_req)
+        requested = req.model_name
+        if requested:
+            if _transcriber is None or _transcriber.model_name != requested:
+                load(LoadRequest(model_name=requested))
+        elif _transcriber is None:
+            load(LoadRequest(model_name=MODEL_SIZE_DEFAULT))
 
         transcriber = _get_transcriber()
         processed_path = AudioPreprocessor.preprocess(req.audio_path)
