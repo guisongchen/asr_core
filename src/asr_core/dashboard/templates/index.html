@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section id="status-panel" hx-get="/partials/status" hx-trigger="load, refresh from:body">
+    {% include "partials/status.html" %}
+</section>
+
+<script>
+(function() {
+    var polling = null;
+    document.body.addEventListener('htmx:afterSettle', function() {
+        var badge = document.querySelector('.badge-loading');
+        var panel = document.getElementById('status-panel');
+        if (badge && !polling) {
+            polling = setInterval(function() { htmx.trigger(panel, 'refresh'); }, 3000);
+        } else if (!badge && polling) {
+            clearInterval(polling);
+            polling = null;
+        }
+    });
+
+    document.body.addEventListener('htmx:beforeRequest', function(e) {
+        var form = document.getElementById('model-actions');
+        if (form && form.contains(e.target)) {
+            form.querySelectorAll('button, select').forEach(function(el) {
+                el.disabled = true;
+            });
+        }
+    });
+})();
+</script>
+
+{% endblock %}

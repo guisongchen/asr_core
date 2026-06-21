@@ -9,6 +9,7 @@ dependencies = [
     "uvicorn>=0.27.0",
     "httpx>=0.27.0",
     "pydantic>=2.0.0",
+    "jinja2>=3.0.0",
     "torch>=2.0.0",
     "torchaudio>=2.0.0",
     "soundfile>=0.12.0",
@@ -18,6 +19,7 @@ dependencies = [
 
 [project.scripts]
 asr-core = "asr_core.__main__:main"
+asr-core-dashboard = "asr_core.dashboard.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -13,6 +13,10 @@ MODEL_CHOICES = ["qwen3-asr-0.6b", "Qwen3-ASR-1.7B"]
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 MODEL_LOCAL_PATH = str(PROJECT_ROOT / "models" / MODEL_SIZE_DEFAULT)
 
+# Dashboard
+DASHBOARD_HOST = "127.0.0.1"
+DASHBOARD_PORT = 8124
+
 # Audio
 SAMPLE_RATE = 16000
 
