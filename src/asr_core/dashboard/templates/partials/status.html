@@ -62,7 +62,37 @@
 </div>
 
 <!-- 服务状态卡片 -->
-<div class="card services-card" style="margin-top:1.5rem">
+<div class="card services-card">
     <h2>应用服务</h2>
-    <iframe src="http://127.0.0.1:8125/embed" class="services-frame"></iframe>
+    <table class="services-table">
+        <thead>
+            <tr>
+                <th>服务</th>
+                <th>状态</th>
+                <th>运行时长</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for svc in services %}
+            <tr>
+                <td>{{ svc.name }}</td>
+                <td><span class="badge badge-{{ 'active' if svc.active else 'inactive' }}">{{ svc.status }}</span></td>
+                <td>{{ svc.uptime or '-' }}</td>
+                <td class="actions">
+                    <button hx-post="/api/services/{{ svc.name }}/start"
+                            hx-target="#status-panel"
+                            hx-swap="innerHTML">启动</button>
+                    <button class="danger"
+                            hx-post="/api/services/{{ svc.name }}/stop"
+                            hx-target="#status-panel"
+                            hx-swap="innerHTML">停止</button>
+                    <button hx-post="/api/services/{{ svc.name }}/restart"
+                            hx-target="#status-panel"
+                            hx-swap="innerHTML">重启</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>

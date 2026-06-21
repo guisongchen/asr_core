@@ -6,17 +6,47 @@
     {% include "partials/status.html" %}
 </section>
 
+<section class="logs-section">
+    <div class="section-header">
+        <h2>服务日志</h2>
+        <select id="log-service"
+                hx-get="/partials/logs/asr-core"
+                hx-target="#logs-content"
+                hx-trigger="change, load">
+            {% for svc in ["asr-core", "asr-core-dashboard", "voice-to-text", "lp998-listener", "voice-to-text-dashboard"] %}
+            <option value="{{ svc }}"{% if svc == "asr-core" %} selected{% endif %}>{{ svc }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div id="logs-content" class="logs-box"
+         hx-get="/partials/logs/asr-core"
+         hx-target="this"
+         hx-trigger="every 10s">
+        {% include "partials/logs.html" %}
+    </div>
+</section>
+
 <script>
 (function() {
-    var polling = null;
+    var interval = null;
+    var fast = false;
+
+    function startPoll(ms) {
+        if (interval) clearInterval(interval);
+        var panel = document.getElementById('status-panel');
+        interval = setInterval(function() { htmx.trigger(panel, 'refresh'); }, ms);
+    }
+
     document.body.addEventListener('htmx:afterSettle', function() {
         var badge = document.querySelector('.badge-loading');
-        var panel = document.getElementById('status-panel');
-        if (badge && !polling) {
-            polling = setInterval(function() { htmx.trigger(panel, 'refresh'); }, 3000);
-        } else if (!badge && polling) {
-            clearInterval(polling);
-            polling = null;
+        if (badge && !fast) {
+            fast = true;
+            startPoll(3000);
+        } else if (!badge && fast) {
+            fast = false;
+            startPoll(10000);
+        } else if (!badge && !interval) {
+            startPoll(10000);
         }
     });
 
@@ -28,6 +58,16 @@
             });
         }
     });
+
+    var logSelect = document.getElementById('log-service');
+    if (logSelect) {
+        logSelect.addEventListener('change', function() {
+            var logs = document.getElementById('logs-content');
+            logs.setAttribute('hx-get', '/partials/logs/' + this.value);
+            htmx.process(logs);
+            htmx.trigger(logs, 'load');
+        });
+    }
 })();
 </script>
 
