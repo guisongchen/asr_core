@@ -20,7 +20,6 @@ class SystemdManager:
         "asr-core-dashboard",
         "voice-to-text",
         "lp998-listener",
-        "voice-to-text-dashboard",
     ]
 
     def __init__(self, user: bool = True):
