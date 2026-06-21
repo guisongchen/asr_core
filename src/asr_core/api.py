@@ -1,5 +1,6 @@
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import psutil
 import torch
@@ -92,6 +93,7 @@ def transcribe(req: TranscribeRequest):
     global _transcriber
     _stats["requests_total"] += 1
 
+    processed_path = None
     try:
         requested = req.model_name
         if requested:
@@ -110,6 +112,9 @@ def transcribe(req: TranscribeRequest):
     except Exception as e:
         _stats["requests_failed"] += 1
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if processed_path and processed_path != req.audio_path:
+            Path(processed_path).unlink(missing_ok=True)
 
 
 @app.get("/stats")
