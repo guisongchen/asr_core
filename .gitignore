@@ -1,0 +1,12 @@
+.venv/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.log
+/tmp/
+models/*
+!models/.gitkeep
