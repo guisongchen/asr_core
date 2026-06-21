@@ -83,16 +83,19 @@
                     <button hx-post="/api/services/{{ svc.name }}/start"
                             hx-target="#status-panel"
                             hx-swap="innerHTML"
-                            hx-disabled-elt="#acts-{{ svc.name }} button">启动</button>
+                            hx-disabled-elt="#acts-{{ svc.name }} button"
+                            {% if svc.active %}disabled{% endif %}>启动</button>
                     <button class="danger"
                             hx-post="/api/services/{{ svc.name }}/stop"
                             hx-target="#status-panel"
                             hx-swap="innerHTML"
-                            hx-disabled-elt="#acts-{{ svc.name }} button">停止</button>
+                            hx-disabled-elt="#acts-{{ svc.name }} button"
+                            {% if not svc.active %}disabled{% endif %}>停止</button>
                     <button hx-post="/api/services/{{ svc.name }}/restart"
                             hx-target="#status-panel"
                             hx-swap="innerHTML"
-                            hx-disabled-elt="#acts-{{ svc.name }} button">重启</button>
+                            hx-disabled-elt="#acts-{{ svc.name }} button"
+                            {% if not svc.active %}disabled{% endif %}>重启</button>
                 </td>
             </tr>
             {% endfor %}
