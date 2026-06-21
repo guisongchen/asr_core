@@ -40,12 +40,16 @@ def main():
     )
     args = parser.parse_args()
 
-    # Clean up stale socket
+    # Clean up stale socket only if nothing is listening
     if not args.tcp and os.path.exists(SOCKET_PATH):
         try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                s.settimeout(0.5)
+                s.connect(SOCKET_PATH)
+            print(f"ASRCore is already running on {SOCKET_PATH}", file=sys.stderr)
+            sys.exit(1)
+        except (OSError, ConnectionRefusedError):
             os.unlink(SOCKET_PATH)
-        except OSError:
-            pass
 
     config = uvicorn.Config(
         app,
@@ -56,7 +60,7 @@ def main():
     )
     server = uvicorn.Server(config)
 
-    # Handle signals cleanly
+    # Handle signals cleanly and remove socket on exit
     def handle_signal(signum, frame):
         print(f"\nReceived signal {signum}, shutting down...")
         server.should_exit = True
@@ -64,21 +68,28 @@ def main():
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
-    if args.detach:
-        ready = threading.Event()
+    try:
+        if args.detach:
+            ready = threading.Event()
 
-        def wait_and_exit():
-            ok = _wait_for_socket(SOCKET_PATH, timeout=10.0) if not args.tcp else True
-            if ok:
-                print("ASRCore daemon ready")
-            else:
-                print("ASRCore daemon failed to start within timeout")
-                os._exit(1)
+            def wait_and_exit():
+                ok = _wait_for_socket(SOCKET_PATH, timeout=10.0) if not args.tcp else True
+                if ok:
+                    print("ASRCore daemon ready")
+                else:
+                    print("ASRCore daemon failed to start within timeout")
+                    os._exit(1)
 
-        threading.Thread(target=wait_and_exit, daemon=True).start()
-        server.run()
-    else:
-        server.run()
+            threading.Thread(target=wait_and_exit, daemon=True).start()
+            server.run()
+        else:
+            server.run()
+    finally:
+        if not args.tcp:
+            try:
+                os.unlink(SOCKET_PATH)
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":

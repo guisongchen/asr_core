@@ -1,4 +1,5 @@
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -21,12 +22,19 @@ class ASRCoreClient:
         )
 
     def _ensure_running(self):
-        if not os.path.exists(self.socket_path):
-            if not self.auto_start:
-                raise ConnectionError(
-                    f"ASRCore socket not found at {self.socket_path}"
-                )
-            self._spawn_daemon()
+        if os.path.exists(self.socket_path):
+            try:
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.5)
+                    s.connect(self.socket_path)
+                    return
+            except OSError:
+                pass
+        if not self.auto_start:
+            raise ConnectionError(
+                f"ASRCore socket not found at {self.socket_path}"
+            )
+        self._spawn_daemon()
 
     def _spawn_daemon(self):
         project_root = Path(__file__).parent.parent.parent
