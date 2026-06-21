@@ -1,6 +1,5 @@
 import threading
 import time
-from pathlib import Path
 
 import torch
 from qwen_asr import Qwen3ASRModel
@@ -8,7 +7,9 @@ from qwen_asr import Qwen3ASRModel
 from .config import (
     ALLOWED_LANGUAGES,
     MODEL_CHOICES,
+    MODEL_DIR,
     MODEL_READY_TIMEOUT,
+    MODEL_SIZE_DEFAULT,
 )
 
 
@@ -16,7 +17,7 @@ class AudioTranscriber:
     """Qwen3-ASR model wrapper with async loading and lifecycle management."""
 
     def __init__(self, model_name: str = None):
-        self.model_name = model_name or MODEL_LOCAL_PATH.split("/")[-1]
+        self.model_name = model_name or MODEL_SIZE_DEFAULT
         self._model = None
         self._ready = threading.Event()
         self._error = None
@@ -35,8 +36,7 @@ class AudioTranscriber:
 
     def _load(self):
         try:
-            project_root = Path(__file__).parent.parent.parent
-            local_path = project_root / "models" / self.model_name
+            local_path = MODEL_DIR / self.model_name
             if local_path.is_dir():
                 model_id = str(local_path)
             else:

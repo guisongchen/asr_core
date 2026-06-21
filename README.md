@@ -40,9 +40,18 @@ systemctl --user enable --now $PWD/services/asr-core.service
 
 ## Models
 
-Place models under `models/` or symlink them here:
+Models are loaded from the directory configured in `asr_core.toml`:
+
+```toml
+[models]
+model_dir = "/home/ccc/models"
+```
+
+Place model directories there or symlink them:
 
 ```bash
-ln -s /path/to/qwen3-asr-0.6b models/qwen3-asr-0.6b
-ln -s /path/to/Qwen3-ASR-1.7B models/Qwen3-ASR-1.7B
+ln -s /path/to/qwen3-asr-0.6b /home/ccc/models/qwen3-asr-0.6b
+ln -s /path/to/Qwen3-ASR-1.7B /home/ccc/models/Qwen3-ASR-1.7B
 ```
+
+If `asr_core.toml` is missing, the default model directory is `/home/ccc/models`.
