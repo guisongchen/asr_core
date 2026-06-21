@@ -9,19 +9,23 @@
 <section class="logs-section">
     <div class="section-header">
         <h2>服务日志</h2>
-        <select id="log-service"
-                hx-get="/partials/logs/asr-core"
-                hx-target="#logs-content"
-                hx-trigger="change, load">
-            {% for svc in ["asr-core", "asr-core-dashboard", "voice-to-text", "lp998-listener"] %}
-            <option value="{{ svc }}"{% if svc == "asr-core" %} selected{% endif %}>{{ svc }}</option>
-            {% endfor %}
-        </select>
+        <div class="logs-controls">
+            <select id="log-service"
+                    hx-get="/partials/logs/asr-core"
+                    hx-target="#logs-content"
+                    hx-trigger="change, load">
+                {% for svc in ["asr-core", "asr-core-dashboard", "voice-to-text", "lp998-listener"] %}
+                <option value="{{ svc }}"{% if svc == "asr-core" %} selected{% endif %}>{{ svc }}</option>
+                {% endfor %}
+            </select>
+            <button class="refresh-btn"
+                    onclick="htmx.trigger('#logs-content','load')">刷新日志</button>
+        </div>
     </div>
     <div id="logs-content" class="logs-box"
          hx-get="/partials/logs/asr-core"
          hx-target="this"
-         hx-trigger="every 10s">
+         hx-trigger="load">
         {% include "partials/logs.html" %}
     </div>
 </section>

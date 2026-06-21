@@ -198,6 +198,11 @@ button:disabled, select:disabled { opacity: 0.4; cursor: not-allowed; }
     background: var(--bg);
     color: var(--text);
 }
+.logs-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
 .logs-box {
     background: #0b0c0f;
     border: 1px solid var(--border);
