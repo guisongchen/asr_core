@@ -28,7 +28,14 @@ asr_core/
 ```bash
 cd /home/ccc/projects/asr_core
 python3 -m venv .venv
-uv pip install -e .
+uv pip install -e ".[server]"
+```
+
+For client-only projects (e.g. `voice_to_text`, `video_to_md`), install the base
+package without GPU/server dependencies:
+
+```bash
+uv pip install -e /home/ccc/projects/asr_core
 ```
 
 The project expects Python 3.10+ and a CUDA-capable GPU for model inference.
