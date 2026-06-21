@@ -136,6 +136,32 @@ button.danger { background: var(--danger); }
 button.danger:hover { background: var(--danger-hover); }
 button:disabled, select:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* request-in-flight */
+button.htmx-request {
+    cursor: wait;
+    opacity: 0.7;
+    position: relative;
+}
+button.htmx-request::after {
+    content: '';
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: 0.35rem;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.5s linear infinite;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#status-panel.htmx-request {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
 /* ── stats ────────────────────────────────── */
 
 .stat-grid {
