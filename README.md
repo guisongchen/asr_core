@@ -44,14 +44,14 @@ Models are loaded from the directory configured in `asr_core.toml`:
 
 ```toml
 [models]
-model_dir = "/home/ccc/models"
+model_dir = "/home/ccc/models/asr"
 ```
 
-Place model directories there or symlink them:
+Place model directories there:
 
 ```bash
-ln -s /path/to/qwen3-asr-0.6b /home/ccc/models/qwen3-asr-0.6b
-ln -s /path/to/Qwen3-ASR-1.7B /home/ccc/models/Qwen3-ASR-1.7B
+mv /path/to/qwen3-asr-0.6b /home/ccc/models/asr/qwen3-asr-0.6b
+mv /path/to/Qwen3-ASR-1.7B /home/ccc/models/asr/Qwen3-ASR-1.7B
 ```
 
-If `asr_core.toml` is missing, the default model directory is `/home/ccc/models`.
+If `asr_core.toml` is missing, the default model directory is `/home/ccc/models/asr`.

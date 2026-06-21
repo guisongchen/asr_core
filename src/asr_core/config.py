@@ -29,7 +29,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 # Model defaults
 _MODEL_DEFAULTS = {
-    "model_dir": "/home/ccc/models",
+    "model_dir": "/home/ccc/models/asr",
     "default_model": "qwen3-asr-0.6b",
     "allowed_models": ["qwen3-asr-0.6b", "Qwen3-ASR-1.7B"],
 }

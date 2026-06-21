@@ -79,16 +79,16 @@ Configure the model directory in `asr_core.toml`:
 
 ```toml
 [models]
-model_dir = "/home/ccc/models"
+model_dir = "/home/ccc/models/asr"
 ```
 
-If the config file is missing, `model_dir` defaults to `/home/ccc/models`.
+If the config file is missing, `model_dir` defaults to `/home/ccc/models/asr`.
 
-Create symlinks to share models with other projects:
+Place model directories there:
 
 ```bash
-ln -s /home/ccc/projects/voice_to_text/models/qwen3-asr-0.6b /home/ccc/models/qwen3-asr-0.6b
-ln -s /home/ccc/projects/video_to_md/models/Qwen3-ASR-1.7B /home/ccc/models/Qwen3-ASR-1.7B
+mv /path/to/qwen3-asr-0.6b /home/ccc/models/asr/qwen3-asr-0.6b
+mv /path/to/Qwen3-ASR-1.7B /home/ccc/models/asr/Qwen3-ASR-1.7B
 ```
 
 ## Client usage
