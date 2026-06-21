@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<section id="status-panel" hx-get="/partials/status" hx-trigger="load, refresh from:body">
+<section id="status-panel" hx-get="/partials/status" hx-trigger="load, refresh-status from:body">
     {% include "partials/status.html" %}
 </section>
 
@@ -21,7 +21,7 @@
     <div id="logs-content" class="logs-box"
          hx-get="/partials/logs/asr-core"
          hx-target="this"
-         hx-trigger="load, refresh from:body">
+         hx-trigger="load, refresh-logs from:body">
         {% include "partials/logs.html" %}
     </div>
 </section>
@@ -34,7 +34,7 @@
     function startPoll(ms) {
         if (interval) clearInterval(interval);
         var panel = document.getElementById('status-panel');
-        interval = setInterval(function() { htmx.trigger(panel, 'refresh'); }, ms);
+        interval = setInterval(function() { htmx.trigger(panel, 'refresh-status'); }, ms);
     }
 
     document.body.addEventListener('htmx:afterSettle', function() {

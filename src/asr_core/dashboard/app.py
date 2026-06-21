@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -111,6 +111,14 @@ def api_service_restart(request: Request, name: str):
 @app.get("/api/services/{name}/logs")
 def api_service_logs(name: str, lines: int = 50):
     return {"name": name, "logs": systemd.logs(name, lines)}
+
+
+@app.post("/api/refresh")
+def api_refresh():
+    return Response(
+        status_code=200,
+        headers={"HX-Trigger": '{"refresh-status": "", "refresh-logs": ""}'},
+    )
 
 
 # ── partials ──────────────────────────────────────────────────────

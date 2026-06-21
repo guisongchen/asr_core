@@ -16,7 +16,8 @@
                     <p class="subtitle">模型管理 &middot; 推理监控 &middot; GPU 状态</p>
                 </div>
                 <button class="refresh-btn"
-                        onclick="htmx.trigger('#status-panel','refresh');htmx.trigger('#logs-content','refresh')">刷新</button>
+                        hx-post="/api/refresh"
+                        hx-swap="none">刷新</button>
             </div>
         </header>
         {% block content %}{% endblock %}
