@@ -1,0 +1,2 @@
+[console_scripts]
+asr-core = asr_core.__main__:main

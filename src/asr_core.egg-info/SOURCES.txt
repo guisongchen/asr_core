@@ -1,0 +1,16 @@
+pyproject.toml
+src/asr_core/__init__.py
+src/asr_core/__main__.py
+src/asr_core/api.py
+src/asr_core/audio.py
+src/asr_core/client.py
+src/asr_core/config.py
+src/asr_core/models.py
+src/asr_core/server.py
+src/asr_core/transcriber.py
+src/asr_core.egg-info/PKG-INFO
+src/asr_core.egg-info/SOURCES.txt
+src/asr_core.egg-info/dependency_links.txt
+src/asr_core.egg-info/entry_points.txt
+src/asr_core.egg-info/requires.txt
+src/asr_core.egg-info/top_level.txt

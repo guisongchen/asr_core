@@ -1,0 +1,27 @@
+[project]
+name = "asr-core"
+version = "1.0.0"
+description = "Shared ASR model service with HTTP-over-Unix-socket API"
+requires-python = ">=3.10"
+dependencies = [
+    "qwen-asr",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0.0",
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+    "soundfile>=0.12.0",
+    "numpy>=1.24.0",
+    "psutil>=5.9.0",
+]
+
+[project.scripts]
+asr-core = "asr_core.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
