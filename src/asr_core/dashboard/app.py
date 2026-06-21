@@ -126,6 +126,15 @@ def partial_status(request: Request):
 
 @app.get("/partials/logs/{name}", response_class=HTMLResponse)
 def partial_logs(request: Request, name: str, lines: int = 50):
+    return _render_logs(request, name, lines)
+
+
+@app.get("/partials/logs", response_class=HTMLResponse)
+def partial_logs_query(request: Request, name: str, lines: int = 50):
+    return _render_logs(request, name, lines)
+
+
+def _render_logs(request: Request, name: str, lines: int):
     return templates.TemplateResponse(
         request,
         "partials/logs.html",

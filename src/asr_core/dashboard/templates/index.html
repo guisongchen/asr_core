@@ -19,7 +19,9 @@
                 {% endfor %}
             </select>
             <button class="refresh-btn"
-                    onclick="htmx.trigger('#logs-content','load')">刷新日志</button>
+                    hx-get="/partials/logs"
+                    hx-include="#log-service"
+                    hx-target="#logs-content">刷新日志</button>
         </div>
     </div>
     <div id="logs-content" class="logs-box"
