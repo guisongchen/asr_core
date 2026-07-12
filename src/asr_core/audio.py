@@ -43,7 +43,7 @@ class AudioPreprocessor:
 
     @staticmethod
     def _reduce_noise(
-        waveform, n_fft=2048, hop_length=512, noise_reduction=0.7
+        waveform, n_fft=2048, hop_length=512, noise_reduction=0.5
     ):
         try:
             audio_np = waveform.squeeze().numpy()

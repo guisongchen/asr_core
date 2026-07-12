@@ -47,7 +47,7 @@ class AudioTranscriber:
                 dtype=torch.bfloat16,
                 device_map="cuda",
                 max_inference_batch_size=1,
-                max_new_tokens=256,
+                max_new_tokens=1024,
                 local_files_only=True,
             )
         except Exception as e:
