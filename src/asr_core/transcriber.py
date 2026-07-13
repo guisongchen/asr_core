@@ -1,3 +1,4 @@
+import gc
 import threading
 import time
 
@@ -58,13 +59,16 @@ class AudioTranscriber:
     def unload(self):
         """Unload the model and free GPU memory."""
         with self._lock:
-            self._model = None
+            if self._model is not None:
+                del self._model
+                self._model = None
             self._ready.clear()
             self._error = None
             self._load_thread = None
-        try:
-            import torch.cuda
 
+        gc.collect()
+
+        try:
             torch.cuda.empty_cache()
         except Exception:
             pass
