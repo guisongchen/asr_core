@@ -22,6 +22,14 @@ def _gpu_memory_mb() -> float | None:
         return None
 
 
+def _gpu_system_mb() -> float | None:
+    try:
+        free, total = torch.cuda.mem_get_info()
+        return (total - free) / 1024 / 1024
+    except Exception:
+        return None
+
+
 def _get_transcriber() -> AudioTranscriber:
     if _transcriber is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
@@ -121,7 +129,7 @@ def transcribe(req: TranscribeRequest):
 def stats():
     return {
         **_stats,
-        "gpu_memory_mb": _gpu_memory_mb(),
+        "gpu_memory_mb": _gpu_system_mb(),
         "cpu_percent": psutil.cpu_percent(interval=0.1),
         "memory_percent": psutil.virtual_memory().percent,
     }
