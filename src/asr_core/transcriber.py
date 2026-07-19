@@ -113,6 +113,15 @@ class AudioTranscriber:
             text = results[0].text.strip()
             detected = results[0].language.lower() if results[0].language else ""
 
+        # Release intermediate GPU tensors cached by PyTorch's CUDA allocator
+        # to prevent gradual memory growth across repeated calls.
+        del results
+        gc.collect()
+        try:
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+
         return {
             "text": text,
             "detected_language": detected,
