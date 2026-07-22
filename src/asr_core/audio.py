@@ -1,9 +1,14 @@
+import logging
+from pathlib import Path
+
 import numpy as np
 import soundfile as sf
 import torch
 import torchaudio
 
 from .config import SAMPLE_RATE
+
+logger = logging.getLogger(__name__)
 
 
 class AudioPreprocessor:
@@ -33,12 +38,14 @@ class AudioPreprocessor:
 
             waveform = AudioPreprocessor._reduce_noise(waveform)
 
-            processed_path = audio_path.replace(".wav", "_processed.wav")
+            # Build a safe processed path that never collides with the original
+            p = Path(audio_path)
+            processed_path = str(p.with_name(p.stem + "_processed.wav"))
             sf.write(processed_path, waveform.squeeze().numpy(), SAMPLE_RATE)
             return processed_path
 
         except Exception as e:
-            print(f"  Warning: Audio preprocessing failed ({e}), using original")
+            logger.warning("Audio preprocessing failed (%s), using original", e)
             return audio_path
 
     @staticmethod
@@ -47,10 +54,12 @@ class AudioPreprocessor:
     ):
         try:
             audio_np = waveform.squeeze().numpy()
+            window = torch.hann_window(n_fft)
             stft = torch.stft(
                 waveform.squeeze(),
                 n_fft=n_fft,
                 hop_length=hop_length,
+                window=window,
                 return_complex=True,
             )
             window_size = int(0.05 * SAMPLE_RATE)
@@ -95,6 +104,7 @@ class AudioPreprocessor:
                 cleaned_stft,
                 n_fft=n_fft,
                 hop_length=hop_length,
+                window=window,
                 length=len(audio_np),
             )
             return cleaned.unsqueeze(0)

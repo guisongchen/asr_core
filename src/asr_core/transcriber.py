@@ -1,4 +1,5 @@
 import gc
+import logging
 import threading
 import time
 
@@ -7,11 +8,12 @@ from qwen_asr import Qwen3ASRModel
 
 from .config import (
     ALLOWED_LANGUAGES,
-    MODEL_CHOICES,
     MODEL_DIR,
     MODEL_READY_TIMEOUT,
     MODEL_SIZE_DEFAULT,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AudioTranscriber:
@@ -21,15 +23,22 @@ class AudioTranscriber:
         self.model_name = model_name or MODEL_SIZE_DEFAULT
         self._model = None
         self._ready = threading.Event()
-        self._error = None
+        self._error: Exception | None = None
         self._lock = threading.Lock()
-        self._load_thread = None
+        self._load_thread: threading.Thread | None = None
+        self._cancelled = False
+
+    @property
+    def error(self) -> Exception | None:
+        """Public accessor for the last load error."""
+        return self._error
 
     def load(self):
         """Start loading the model in a background thread."""
         with self._lock:
             if self._load_thread is not None and self._load_thread.is_alive():
                 return
+            self._cancelled = False
             self._ready.clear()
             self._error = None
             self._load_thread = threading.Thread(target=self._load, daemon=True)
@@ -38,27 +47,38 @@ class AudioTranscriber:
     def _load(self):
         try:
             local_path = MODEL_DIR / self.model_name
-            if local_path.is_dir():
-                model_id = str(local_path)
-            else:
-                model_id = f"Qwen/{self.model_name}"
+            if not local_path.is_dir():
+                raise FileNotFoundError(
+                    f"Model directory not found: {local_path}. "
+                    f"Place the model at {local_path} or update model_dir in asr_core.toml."
+                )
 
+            logger.info("Loading model '%s' from %s", self.model_name, local_path)
             self._model = Qwen3ASRModel.from_pretrained(
-                model_id,
+                str(local_path),
                 dtype=torch.bfloat16,
                 device_map="cuda",
                 max_inference_batch_size=1,
                 max_new_tokens=1024,
                 local_files_only=True,
             )
+            logger.info("Model '%s' loaded successfully", self.model_name)
         except Exception as e:
-            self._error = e
+            if not self._cancelled:
+                logger.error("Failed to load model '%s': %s", self.model_name, e)
+                self._error = e
         finally:
             self._ready.set()
 
     def unload(self):
         """Unload the model and free GPU memory."""
         with self._lock:
+            self._cancelled = True
+
+            # Wait for an in-progress load to finish before tearing down
+            if self._load_thread is not None and self._load_thread.is_alive():
+                self._load_thread.join(timeout=30)
+
             if self._model is not None:
                 del self._model
                 self._model = None
@@ -72,6 +92,8 @@ class AudioTranscriber:
             torch.cuda.empty_cache()
         except Exception:
             pass
+
+        logger.info("Model '%s' unloaded, GPU memory released", self.model_name)
 
     def wait_for_ready(self, timeout: float = MODEL_READY_TIMEOUT):
         if not self._ready.wait(timeout=timeout):
@@ -106,8 +128,8 @@ class AudioTranscriber:
 
         # If model hallucinated a wrong language, force English as fallback
         if text and detected and detected not in ALLOWED_LANGUAGES:
-            print(
-                f"  ⚠ Unexpected language '{detected}', re-transcribing as English"
+            logger.warning(
+                "Unexpected language '%s', re-transcribing as English", detected
             )
             results = model.transcribe(audio=str(audio_path), language="English")
             text = results[0].text.strip()

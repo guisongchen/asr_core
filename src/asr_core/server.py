@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import signal
 import socket
@@ -10,6 +11,17 @@ import uvicorn
 
 from .api import app
 from .config import HOST, PORT, SOCKET_PATH
+
+logger = logging.getLogger(__name__)
+
+
+def _setup_logging():
+    """Configure logging for the daemon."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
 
 def _wait_for_socket(path: str, timeout: float = 5.0) -> bool:
@@ -36,9 +48,11 @@ def main():
     parser.add_argument(
         "--detach",
         action="store_true",
-        help="Detach from terminal after socket is ready",
+        help="Run in background-ready mode (prints readiness, used by auto-start)",
     )
     args = parser.parse_args()
+
+    _setup_logging()
 
     # Clean up stale socket only if nothing is listening
     if not args.tcp and os.path.exists(SOCKET_PATH):
@@ -46,7 +60,7 @@ def main():
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
                 s.settimeout(0.5)
                 s.connect(SOCKET_PATH)
-            print(f"ASRCore is already running on {SOCKET_PATH}", file=sys.stderr)
+            logger.error("ASRCore is already running on %s", SOCKET_PATH)
             sys.exit(1)
         except (OSError, ConnectionRefusedError):
             os.unlink(SOCKET_PATH)
@@ -62,7 +76,7 @@ def main():
 
     # Handle signals cleanly and remove socket on exit
     def handle_signal(signum, frame):
-        print(f"\nReceived signal {signum}, shutting down...")
+        logger.info("Received signal %d, shutting down...", signum)
         server.should_exit = True
 
     signal.signal(signal.SIGTERM, handle_signal)
@@ -70,17 +84,15 @@ def main():
 
     try:
         if args.detach:
-            ready = threading.Event()
-
-            def wait_and_exit():
+            def wait_and_report():
                 ok = _wait_for_socket(SOCKET_PATH, timeout=10.0) if not args.tcp else True
                 if ok:
-                    print("ASRCore daemon ready")
+                    logger.info("ASRCore daemon ready")
                 else:
-                    print("ASRCore daemon failed to start within timeout")
-                    os._exit(1)
+                    logger.error("ASRCore daemon failed to start within timeout")
+                    server.should_exit = True
 
-            threading.Thread(target=wait_and_exit, daemon=True).start()
+            threading.Thread(target=wait_and_report, daemon=True).start()
             server.run()
         else:
             server.run()

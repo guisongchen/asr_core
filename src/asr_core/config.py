@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -7,7 +8,7 @@ else:
     import tomli as tomllib
 
 # Server
-SOCKET_PATH = "/tmp/asr_core.sock"
+SOCKET_PATH = os.environ.get("ASR_CORE_SOCKET", "/tmp/asr_core.sock")
 HOST = "127.0.0.1"
 PORT = 8123
 
@@ -24,9 +25,6 @@ MODEL_READY_TIMEOUT = 120
 # Allowed output languages for fallback logic
 ALLOWED_LANGUAGES = {"english", "chinese"}
 
-# Project paths
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-
 # Model defaults
 _MODEL_DEFAULTS = {
     "model_dir": "/home/ccc/models/asr",
@@ -35,8 +33,17 @@ _MODEL_DEFAULTS = {
 }
 
 
+def _find_config_path() -> Path:
+    """Locate asr_core.toml via env var or project root heuristic."""
+    env_path = os.environ.get("ASR_CORE_CONFIG")
+    if env_path:
+        return Path(env_path)
+    # Fallback: assume src layout (src/asr_core/config.py -> project root)
+    return Path(__file__).parent.parent.parent / "asr_core.toml"
+
+
 def _load_config() -> dict:
-    config_path = PROJECT_ROOT / "asr_core.toml"
+    config_path = _find_config_path()
     if not config_path.is_file():
         return {}
     try:

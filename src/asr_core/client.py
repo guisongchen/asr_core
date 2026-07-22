@@ -1,4 +1,6 @@
+import logging
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -8,6 +10,19 @@ from pathlib import Path
 import httpx
 
 from .config import MODEL_SIZE_DEFAULT, SOCKET_PATH
+
+logger = logging.getLogger(__name__)
+
+
+def _find_python() -> str:
+    """Find the best Python interpreter for spawning the daemon."""
+    # 1. Project venv (editable install layout)
+    project_root = Path(__file__).parent.parent.parent
+    venv_python = project_root / ".venv" / "bin" / "python3"
+    if venv_python.exists():
+        return str(venv_python)
+    # 2. Current interpreter (works if asr_core is importable)
+    return sys.executable
 
 
 class ASRCoreClient:
@@ -37,13 +52,10 @@ class ASRCoreClient:
         self._spawn_daemon()
 
     def _spawn_daemon(self):
-        project_root = Path(__file__).parent.parent.parent
-        python = project_root / ".venv" / "bin" / "python3"
-        if not python.exists():
-            python = Path(sys.executable)
+        python = _find_python()
+        logger.info("Auto-starting ASRCore daemon with %s", python)
         subprocess.Popen(
-            [str(python), "-m", "asr_core", "--detach"],
-            cwd=str(project_root),
+            [python, "-m", "asr_core", "--detach"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
@@ -51,9 +63,16 @@ class ASRCoreClient:
         deadline = time.monotonic() + 10.0
         while time.monotonic() < deadline:
             if os.path.exists(self.socket_path):
-                return
+                try:
+                    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                        s.settimeout(0.5)
+                        s.connect(self.socket_path)
+                        logger.info("ASRCore daemon started successfully")
+                        return
+                except OSError:
+                    pass
             time.sleep(0.2)
-        raise ConnectionError("ASRCore daemon did not start")
+        raise ConnectionError("ASRCore daemon did not start within 10s")
 
     def _request(self, method: str, path: str, **kwargs):
         self._ensure_running()
