@@ -38,11 +38,15 @@ systemctl --user enable --now $PWD/services/asr-core.service
 | `/transcribe` | POST | Transcribe an audio file |
 | `/stats` | GET | Request stats and GPU memory |
 
-## Dashboard
+## Architecture
 
-ASRCore includes a web dashboard for monitoring model status, GPU memory, and request stats.
+The model runs in a spawned **worker subprocess** (`worker.py`); the FastAPI supervisor never
+touches CUDA. Unload = terminate the worker, so the driver reclaims all VRAM — no PyTorch
+allocator residue, safe across repeated load/unload cycles.
 
-![Dashboard](asset/snapshot_dashboard.jpeg)
+Monitoring (model status, GPU memory, request stats) lives in the unified
+[system_services_manager](https://github.com/guisongchen/system_services_manager) console;
+the standalone dashboard was removed.
 
 ## Models
 
