@@ -1,10 +1,11 @@
 import logging
+import shutil
+import subprocess
 import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import psutil
-import torch
 from fastapi import FastAPI, HTTPException
 
 from .audio import AudioPreprocessor
@@ -21,17 +22,31 @@ _stats = {"requests_total": 0, "requests_failed": 0}
 
 
 def _gpu_memory_mb() -> float | None:
-    try:
-        return torch.cuda.memory_allocated() / 1024 / 1024
-    except Exception:
+    """VRAM of the model worker process, if one is running (None when unloaded).
+
+    Deliberately nvidia-smi-based: the supervisor must never call torch.cuda.*,
+    which would create its own CUDA context and pin VRAM even when unloaded.
+    """
+    if _transcriber is None:
         return None
+    return _transcriber.gpu_memory_mb()
 
 
 def _gpu_system_mb() -> float | None:
+    """Whole-GPU used memory via nvidia-smi (no CUDA context in this process)."""
+    if not shutil.which("nvidia-smi"):
+        return None
     try:
-        free, total = torch.cuda.mem_get_info()
-        return (total - free) / 1024 / 1024
-    except Exception:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            return None
+        return float(result.stdout.strip().splitlines()[0])
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError, ValueError, IndexError):
         return None
 
 

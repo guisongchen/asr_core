@@ -109,4 +109,9 @@ with ASRCoreClient() as client:
 - Model weights are configured via `asr_core.toml`; do not commit model weights.
 - The service uses `local_files_only=True` when loading models, so models must be present locally.
 - Only one model is loaded at a time; loading a different model unloads the previous one.
+- The model runs in a spawned **worker subprocess** (worker.py); the supervisor never calls
+  torch.cuda.* (it would pin VRAM via its own CUDA context). Unload = terminate the worker,
+  so VRAM is fully reclaimed by the driver — verified zero residue across repeated cycles.
+- Worker pipe protocol: supervisor sends {cmd: transcribe|shutdown}, worker replies
+  {event: ready|load_error|result|transcribe_error}. model_name=None = idle test mode (no GPU).
 - If the daemon hits `CUDA out of memory`, stop other GPU processes or unload the current model first.
