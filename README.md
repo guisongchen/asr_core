@@ -65,3 +65,32 @@ mv /path/to/Qwen3-ASR-1.7B /home/ccc/models/asr/Qwen3-ASR-1.7B
 ```
 
 If `asr_core.toml` is missing, the default model directory is `/home/ccc/models/asr`.
+
+## Cloud ASR backend (no GPU)
+
+For machines without a GPU, ASRCore can forward transcription to Alibaba
+DashScope `qwen3-asr-flash` (billed per token) instead of running a local model.
+
+```toml
+# asr_core.toml
+[cloud]
+backend = "cloud"   # "local" (default) | "cloud"
+```
+
+or via environment variable (wins over the file):
+
+```bash
+export ASR_BACKEND=cloud
+export DASHSCOPE_API_KEY=sk-...   # required; never commit it
+```
+
+Notes:
+
+- Audio is sent as a base64 data URI to the OpenAI-compatible endpoint
+  (`DASHSCOPE_BASE_URL`, default `https://dashscope.aliyuncs.com/compatible-mode/v1`).
+- Base64-encoded audio is limited to 10 MB (~4 min of 16 kHz mono WAV).
+- Optional `asr_options.language` mapping: `chinese`→`zh`, `english`→`en`, etc.;
+  unknown values fall back to auto-detection. ITN is enabled by default.
+- In cloud mode, `/load` only validates the API key (no warm-up) and
+  `/unload` is a no-op state transition; the Unix-socket API is unchanged,
+  so existing clients (voice_to_text) work without modification.

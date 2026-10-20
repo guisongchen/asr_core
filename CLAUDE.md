@@ -16,6 +16,7 @@ asr_core/
 │   ├── models.py      # Pydantic request/response models
 │   ├── client.py      # ASRCoreClient — Python client over Unix socket
 │   ├── transcriber.py # AudioTranscriber — wraps qwen_asr.Qwen3ASRModel
+│   ├── cloud_transcriber.py # CloudTranscriber — DashScope qwen3-asr-flash (no GPU)
 │   ├── audio.py       # AudioPreprocessor — resample, normalize, noise reduction
 │   └── config.py      # Paths, defaults, and asr_core.toml loader
 ├── services/
@@ -115,3 +116,7 @@ with ASRCoreClient() as client:
 - Worker pipe protocol: supervisor sends {cmd: transcribe|shutdown}, worker replies
   {event: ready|load_error|result|transcribe_error}. model_name=None = idle test mode (no GPU).
 - If the daemon hits `CUDA out of memory`, stop other GPU processes or unload the current model first.
+- Cloud backend (`ASR_BACKEND=cloud` or `[cloud] backend = "cloud"` in asr_core.toml):
+  CloudTranscriber mirrors the AudioTranscriber interface and forwards audio to DashScope
+  qwen3-asr-flash as base64 data URI (10 MB encoded limit). Requires DASHSCOPE_API_KEY;
+  billed per token. load() only validates config; no worker/GPU involved.
