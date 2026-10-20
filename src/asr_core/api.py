@@ -9,11 +9,32 @@ import psutil
 from fastapi import FastAPI, HTTPException
 
 from .audio import AudioPreprocessor
-from .config import MODEL_CHOICES, MODEL_SIZE_DEFAULT
+from .cloud_transcriber import CloudTranscriber
+from .config import (
+    ASR_BACKEND,
+    CLOUD_MODEL_CHOICES,
+    CLOUD_MODEL_DEFAULT,
+    MODEL_CHOICES,
+    MODEL_SIZE_DEFAULT,
+)
 from .models import LoadRequest, ModelStatus, TranscribeRequest, TranscribeResponse
 from .transcriber import AudioTranscriber
 
 logger = logging.getLogger(__name__)
+
+
+def _default_model() -> str:
+    return CLOUD_MODEL_DEFAULT if ASR_BACKEND == "cloud" else MODEL_SIZE_DEFAULT
+
+
+def _allowed_models() -> list:
+    return CLOUD_MODEL_CHOICES if ASR_BACKEND == "cloud" else MODEL_CHOICES
+
+
+def _make_transcriber(model_name: str):
+    if ASR_BACKEND == "cloud":
+        return CloudTranscriber(model_name=model_name)
+    return AudioTranscriber(model_name=model_name)
 
 _transcriber: AudioTranscriber | None = None
 _transcriber_lock = threading.Lock()
@@ -103,14 +124,18 @@ def load(req: LoadRequest):
         if _transcriber is not None:
             _transcriber.unload()
 
-        if req.model_name not in MODEL_CHOICES:
+        if req.model_name not in _allowed_models():
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown model '{req.model_name}'. Choices: {MODEL_CHOICES}",
+                detail=f"Unknown model '{req.model_name}'. Choices: {_allowed_models()}",
             )
 
-        _transcriber = AudioTranscriber(model_name=req.model_name)
-        _transcriber.load()
+        _transcriber = _make_transcriber(model_name=req.model_name)
+        try:
+            _transcriber.load()
+        except Exception as e:
+            _transcriber = None
+            raise HTTPException(status_code=500, detail=f"Model load failed: {e}")
 
     # Wait for the model to be ready before returning
     try:
@@ -149,7 +174,7 @@ def transcribe(req: TranscribeRequest):
                 else:
                     requested = None  # already loaded
             elif _transcriber is None:
-                requested = MODEL_SIZE_DEFAULT
+                requested = _default_model()
 
         # Load outside the lock if needed (load() acquires the lock internally)
         if requested:

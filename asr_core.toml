@@ -1,2 +1,11 @@
 [models]
 model_dir = "/home/ccc/models/asr"
+
+# Cloud ASR backend (no GPU required). Uncomment to enable, or set
+# ASR_BACKEND=cloud in the environment (env var wins).
+# Requires DASHSCOPE_API_KEY in the environment — never put keys in this file.
+# [cloud]
+# backend = "cloud"                      # "local" (default) | "cloud"
+# base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+# default_model = "qwen3-asr-flash"
+# allowed_models = ["qwen3-asr-flash"]
