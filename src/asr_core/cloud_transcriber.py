@@ -191,7 +191,10 @@ class CloudTranscriber:
         attempts = 1 + MAX_TRANSPORT_RETRIES
         for attempt in range(1, attempts + 1):
             try:
-                with httpx.Client(timeout=TRANSCRIBE_TIMEOUT, proxy=None) as client:
+                # trust_env=False: bypass http_proxy/all_proxy env vars —
+                # the DashScope endpoint is direct-reachable, and unsupported
+                # schemes (e.g. socks://) would break httpx proxy parsing.
+                with httpx.Client(timeout=TRANSCRIBE_TIMEOUT, trust_env=False) as client:
                     resp = client.post(url, headers=headers, json=payload)
             except httpx.TransportError as e:
                 if attempt < attempts:
