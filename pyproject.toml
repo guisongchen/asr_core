@@ -1,6 +1,6 @@
 [project]
 name = "asr-core"
-version = "1.0.1"
+version = "1.1.0"
 description = "Shared ASR model service with HTTP-over-Unix-socket API"
 requires-python = ">=3.10"
 dependencies = [
